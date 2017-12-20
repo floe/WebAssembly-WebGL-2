@@ -1,6 +1,11 @@
 #include "linmath.h"
 
+#ifdef __EMSCRIPTEN__
 #include <emscripten/emscripten.h>
+#else
+#define emscripten_force_exit exit
+#endif
+
 #define GLFW_INCLUDE_ES3
 #include <GLFW/glfw3.h>
 #include <GLES3/gl3.h>
@@ -64,7 +69,7 @@ static void generate_frame() {
     glfwPollEvents();
 }
 
-static int check_compiled(shader) {
+static int check_compiled(GLuint shader) {
     GLint success = 0;
     glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
 
@@ -82,7 +87,7 @@ static int check_compiled(shader) {
     return success;
 }
 
-static int check_linked(program) {
+static int check_linked(GLuint program) {
     GLint success = 0;
     glGetProgramiv(program, GL_LINK_STATUS, &success);
 
@@ -150,5 +155,9 @@ int main() {
     glVertexAttribPointer(vcol_location, 3, GL_FLOAT, GL_FALSE,
         sizeof(float) * 5, (void*) (sizeof(float) * 2));
 
+  #ifdef __EMSCRIPTEN__
     emscripten_set_main_loop(generate_frame, 0, 0);
+  #else
+    while (!glfwWindowShouldClose(window)) {generate_frame();}
+  #endif
 }
